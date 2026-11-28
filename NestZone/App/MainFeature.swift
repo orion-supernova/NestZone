@@ -107,6 +107,17 @@ public struct MainFeature: Sendable {
         /// (`PaywallHost`).
         @Presents public var paywall: PaywallFeature.State?
 
+        /// Where a first run is, once the person has a home: waiting for
+        /// `pro:status` to say whether to offer Plus, then the paywall, then
+        /// the first shopping item. Nil for everybody else.
+        var firstRun: FirstRunStep?
+        /// "Let's add your first shopping item", the last step of a first run.
+        @Presents public var firstWin: FirstWinFeature.State?
+        /// Settings' "Take the tour", over the Settings sheet.
+        @Presents public var tour: OnboardingFeature.State?
+
+        enum FirstRunStep: Equatable { case awaitingPlus, paywall }
+
         public init(
             homeID: HomeID,
             home: Home? = nil,
@@ -217,6 +228,16 @@ public struct MainFeature: Sendable {
         case paywall(PresentationAction<PaywallFeature.Action>)
         /// A gated control, or the server, asked for the paywall.
         case paywallRequested(ProFeature?)
+        /// The person has a home they just made or joined from the tour: the
+        /// rest of the first run (Plus, then the first win) starts here.
+        case firstRunBegan
+        /// `pro:status` did not answer in time: the offer is skipped, never
+        /// guessed.
+        case firstRunPlusTimedOut
+        /// The paywall is closed and has left: the first win may open.
+        case firstWinReady
+        case firstWin(PresentationAction<FirstWinFeature.Action>)
+        case tour(PresentationAction<OnboardingFeature.Action>)
         /// The paywall was asked for and nothing drew it. State that cannot be
         /// seen is dropped rather than left to swallow the next request.
         case paywallNeverShown
@@ -229,7 +250,7 @@ public struct MainFeature: Sendable {
         case pushRecipeFound(Recipe?)
     }
 
-    private enum CancelID { case presentSettings, captured, dockNotice, paywallShown }
+    private enum CancelID { case presentSettings, captured, dockNotice, paywallShown, firstRunPlus, firstWin }
 
     /// How long "Added 3 to Shopping" stays up.
     static let capturedLinger: Duration = .seconds(4)
@@ -237,6 +258,11 @@ public struct MainFeature: Sendable {
     static let dockNoticeLinger: Duration = .seconds(5)
     /// How long the paywall has to appear before the request is dropped.
     static let paywallShowDeadline: Duration = .seconds(2)
+    /// How long a first run waits for `pro:status` before it skips the offer.
+    static let firstRunPlusDeadline: Duration = .seconds(6)
+    /// A sheet presented in the action that dismisses another is dropped, so
+    /// the first win waits for the paywall to have gone.
+    static let firstWinDelay: Duration = .milliseconds(650)
 
     @Dependency(\.continuousClock) var clock
     @Dependency(\.recipes) var recipesClient
@@ -546,7 +572,9 @@ public struct MainFeature: Sendable {
             // (`TabSegments`) is not touched, so it is where the tab opens
             // again once there is Plus.
             case .proStatus(.statusUpdated):
-                guard !state.heardPro else { return .none }
+                // A first run was waiting on this answer.
+                let firstRun = advanceFirstRun(&state)
+                guard !state.heardPro else { return firstRun }
                 state.heardPro = true
                 if !state.pro.status.isPro {
                     if state.plans.selected == .calendar { state.plans.selected = .recipes }
@@ -556,36 +584,63 @@ public struct MainFeature: Sendable {
                         state.house.selected = .notes
                     }
                 }
-                return .none
+                return firstRun
 
             case let .paywallRequested(feature):
-                guard state.paywall == nil else { return .none }
-                state.paywall = PaywallFeature.State(
-                    feature: feature,
-                    houseName: state.home?.name ?? "",
-                    homeNames: Dictionary(
-                        state.settings.homes.map { ($0.id, $0.name) },
-                        uniquingKeysWith: { first, _ in first }
-                    )
-                )
-                // Whichever host is on top presents it, which takes a frame
-                // or two; its first `.task` is the proof it was drawn.
-                return .run { send in
-                    try await clock.sleep(for: Self.paywallShowDeadline)
-                    await send(.paywallNeverShown)
-                }
-                .cancellable(id: CancelID.paywallShown, cancelInFlight: true)
+                return presentPaywall(&state, feature: feature, context: .sheet)
 
             case .paywall(.presented(.task)):
                 return .cancel(id: CancelID.paywallShown)
 
             case .paywallNeverShown:
                 state.paywall = nil
-                return .none
+                return afterPaywall(&state)
 
             case .paywall(.presented(.delegate(.dismiss))):
                 state.paywall = nil
-                return .cancel(id: CancelID.paywallShown)
+                return .merge(.cancel(id: CancelID.paywallShown), afterPaywall(&state))
+
+            // Swiped away or closed by the system: the same end.
+            case .paywall(.dismiss):
+                return .merge(.cancel(id: CancelID.paywallShown), afterPaywall(&state))
+
+            // The first run, step by step. Plus is offered only to a house
+            // that is known not to have it.
+            case .firstRunBegan:
+                state.firstRun = .awaitingPlus
+                let next = advanceFirstRun(&state)
+                guard state.firstRun == .awaitingPlus else { return next }
+                return .merge(next, .run { send in
+                    try await clock.sleep(for: Self.firstRunPlusDeadline)
+                    await send(.firstRunPlusTimedOut)
+                }
+                .cancellable(id: CancelID.firstRunPlus, cancelInFlight: true))
+
+            case .firstRunPlusTimedOut:
+                guard state.firstRun == .awaitingPlus else { return .none }
+                state.firstRun = nil
+                return startFirstWin()
+
+            case .firstWinReady:
+                guard state.firstWin == nil, state.paywall == nil else { return .none }
+                state.firstWin = FirstWinFeature.State(homeID: state.homeID)
+                return .none
+
+            case .firstWin(.presented(.delegate(.finished))):
+                state.firstWin = nil
+                return .none
+
+            case .firstWin(.presented(.delegate(.openShopping))):
+                state.firstWin = nil
+                return open(.module(.shopping), from: state.selectedTab, &state)
+
+            case .settings(.delegate(.tourRequested)):
+                state.tour = OnboardingFeature.State(mode: .replay)
+                return .none
+
+            case .tour(.presented(.delegate(.finished))):
+                state.tour = nil
+                return .none
 
             // Plus turned on or off. Today and the dock start or stop their
             // calendar and bills reads.
@@ -603,7 +658,8 @@ public struct MainFeature: Sendable {
 
             case .home, .today, .lists, .plans, .house, .messages,
                  .settings, .inbox, .customize, .editName, .capture, .companion,
-                 .proStatus, .moderation, .mirror, .share, .sharedCopy, .paywall:
+                 .proStatus, .moderation, .mirror, .share, .sharedCopy, .paywall,
+                 .firstWin, .tour:
                 return .none
             }
         }
@@ -617,6 +673,68 @@ public struct MainFeature: Sendable {
         .onChange(of: { $0.mirror.userID }) { _, _ in
             Reduce { _, _ in .send(.mirror(.settingsChanged)) }
         }
+
+        // Kept out of the chain above, which the compiler cannot type-check
+        // a modifier longer.
+        EmptyReducer()
+            .ifLet(\.$firstWin, action: \.firstWin) { FirstWinFeature() }
+            .ifLet(\.$tour, action: \.tour) { OnboardingFeature() }
+    }
+
+    /// Opens the paywall over whatever is on top (`PaywallHost`).
+    private func presentPaywall(
+        _ state: inout State,
+        feature: ProFeature?,
+        context: PaywallFeature.State.Context
+    ) -> Effect<Action> {
+        guard state.paywall == nil else { return .none }
+        state.paywall = PaywallFeature.State(
+            feature: feature,
+            context: context,
+            houseName: state.home?.name ?? "",
+            homeNames: Dictionary(
+                state.settings.homes.map { ($0.id, $0.name) },
+                uniquingKeysWith: { first, _ in first }
+            )
+        )
+        // Whichever host is on top presents it, which takes a frame
+        // or two; its first `.task` is the proof it was drawn.
+        return .run { send in
+            try await clock.sleep(for: Self.paywallShowDeadline)
+            await send(.paywallNeverShown)
+        }
+        .cancellable(id: CancelID.paywallShown, cancelInFlight: true)
+    }
+
+    /// The first run's next step once `pro:status` has answered: the paywall
+    /// for a house without Plus, straight to the first win for one that has
+    /// it. Never offers Plus on a guess, and never twice.
+    private func advanceFirstRun(_ state: inout State) -> Effect<Action> {
+        guard state.firstRun == .awaitingPlus, state.pro.status.isLoaded else { return .none }
+        if state.pro.status.isPro {
+            state.firstRun = nil
+            return .merge(.cancel(id: CancelID.firstRunPlus), startFirstWin())
+        }
+        state.firstRun = .paywall
+        return .merge(
+            .cancel(id: CancelID.firstRunPlus),
+            presentPaywall(&state, feature: nil, context: .onboarding)
+        )
+    }
+
+    /// The paywall of a first run has closed, bought or not: on to the first win.
+    private func afterPaywall(_ state: inout State) -> Effect<Action> {
+        guard state.firstRun == .paywall else { return .none }
+        state.firstRun = nil
+        return startFirstWin()
+    }
+
+    private func startFirstWin() -> Effect<Action> {
+        .run { send in
+            try await clock.sleep(for: Self.firstWinDelay)
+            await send(.firstWinReady)
+        }
+        .cancellable(id: CancelID.firstWin, cancelInFlight: true)
     }
 
     /// Takes the person somewhere a screen asked to go.

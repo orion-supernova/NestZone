@@ -11998,4 +11998,281 @@ extension L10n {
     public static var calendarSharedCopyRemove: LocalizedStringResource {
         r("calendar_shared_copy_remove", "Remove calendar")
     }
+
+    // MARK: - Onboarding, first win, and the Plus offer after them
+
+    /// Continue
+    public static var onboardingContinue: LocalizedStringResource {
+        r("onboarding_continue", "Continue")
+    }
+
+    /// Skip
+    public static var onboardingSkip: LocalizedStringResource {
+        r("onboarding_skip", "Skip")
+    }
+
+    /// Step %@ of %@
+    public static func onboardingProgress(_ a0: String, _ a1: String) -> LocalizedStringResource {
+        r("onboarding_progress", "Step \(a0) of \(a1)")
+    }
+
+    /// One home, everyone on the same page
+    public static var onboardingWelcomeTitle: LocalizedStringResource {
+        r("onboarding_welcome_title", "One home, everyone on the same page")
+    }
+
+    /// Chores, shopping, plans and money for the people you live with, all in one place.
+    public static var onboardingWelcomeText: LocalizedStringResource {
+        r("onboarding_welcome_text", "Chores, shopping, plans and money for the people you live with, all in one place.")
+    }
+
+    /// Who do you live with?
+    public static var onboardingHouseholdTitle: LocalizedStringResource {
+        r("onboarding_household_title", "Who do you live with?")
+    }
+
+    /// It stays on this phone and only helps us get the tone right.
+    public static var onboardingHouseholdText: LocalizedStringResource {
+        r("onboarding_household_text", "It stays on this phone and only helps us get the tone right.")
+    }
+
+    /// My partner
+    public static var onboardingHouseholdPartner: LocalizedStringResource {
+        r("onboarding_household_partner", "My partner")
+    }
+
+    /// Flatmates
+    public static var onboardingHouseholdFlatmates: LocalizedStringResource {
+        r("onboarding_household_flatmates", "Flatmates")
+    }
+
+    /// My family
+    public static var onboardingHouseholdFamily: LocalizedStringResource {
+        r("onboarding_household_family", "My family")
+    }
+
+    /// Just me for now
+    public static var onboardingHouseholdSolo: LocalizedStringResource {
+        r("onboarding_household_solo", "Just me for now")
+    }
+
+    /// Everyone knows who's doing what
+    public static var onboardingListsTitle: LocalizedStringResource {
+        r("onboarding_lists_title", "Everyone knows who's doing what")
+    }
+
+    /// Tick off chores, keep one shopping list and see how the work is split.
+    public static var onboardingListsText: LocalizedStringResource {
+        r("onboarding_lists_text", "Tick off chores, keep one shopping list and see how the work is split.")
+    }
+
+    /// Plan the fun stuff too
+    public static var onboardingPlansTitle: LocalizedStringResource {
+        r("onboarding_plans_title", "Plan the fun stuff too")
+    }
+
+    /// A calendar for the house, tonight's dinner and a movie night everyone can vote on.
+    public static var onboardingPlansText: LocalizedStringResource {
+        r("onboarding_plans_text", "A calendar for the house, tonight's dinner and a movie night everyone can vote on.")
+    }
+
+    /// The boring bits, handled
+    public static var onboardingHouseTitle: LocalizedStringResource {
+        r("onboarding_house_title", "The boring bits, handled")
+    }
+
+    /// Notes for the Wi-Fi and bin day, bills split and settled up, and a place to report what's broken.
+    public static var onboardingHouseText: LocalizedStringResource {
+        r("onboarding_house_text", "Notes for the Wi-Fi and bin day, bills split and settled up, and a place to report what's broken.")
+    }
+
+    /// Meet Nestie
+    public static var onboardingNestieTitle: LocalizedStringResource {
+        r("onboarding_nestie_title", "Meet Nestie")
+    }
+
+    /// A plant or pet your house grows together, just by getting things done.
+    public static var onboardingNestieText: LocalizedStringResource {
+        r("onboarding_nestie_text", "A plant or pet your house grows together, just by getting things done.")
+    }
+
+    /// Ready to start?
+    public static var onboardingStartTitle: LocalizedStringResource {
+        r("onboarding_start_title", "Ready to start?")
+    }
+
+    /// Make a home for your people, or join the one they already have.
+    public static var onboardingStartText: LocalizedStringResource {
+        r("onboarding_start_text", "Make a home for your people, or join the one they already have.")
+    }
+
+    /// Start a new home
+    public static var onboardingStartCreate: LocalizedStringResource {
+        r("onboarding_start_create", "Start a new home")
+    }
+
+    /// I have an invite code
+    public static var onboardingStartJoin: LocalizedStringResource {
+        r("onboarding_start_join", "I have an invite code")
+    }
+
+    /// You're all set
+    public static var onboardingDoneTitle: LocalizedStringResource {
+        r("onboarding_done_title", "You're all set")
+    }
+
+    /// You can take the tour again any time from Settings.
+    public static var onboardingDoneText: LocalizedStringResource {
+        r("onboarding_done_text", "You can take the tour again any time from Settings.")
+    }
+
+    /// Take the tour
+    public static var settingsTakeTour: LocalizedStringResource {
+        r("settings_take_tour", "Take the tour")
+    }
+
+    /// Let's add your first shopping item
+    public static var firstWinTitle: LocalizedStringResource {
+        r("first_win_title", "Let's add your first shopping item")
+    }
+
+    /// It goes on your shared list, and everyone in the house sees it.
+    public static var firstWinText: LocalizedStringResource {
+        r("first_win_text", "It goes on your shared list, and everyone in the house sees it.")
+    }
+
+    /// Something you need
+    public static var firstWinField: LocalizedStringResource {
+        r("first_win_field", "Something you need")
+    }
+
+    /// Milk
+    public static var firstWinMilk: LocalizedStringResource {
+        r("first_win_milk", "Milk")
+    }
+
+    /// Bread
+    public static var firstWinBread: LocalizedStringResource {
+        r("first_win_bread", "Bread")
+    }
+
+    /// Toilet paper
+    public static var firstWinToiletPaper: LocalizedStringResource {
+        r("first_win_toilet_paper", "Toilet paper")
+    }
+
+    /// Add to the list
+    public static var firstWinAdd: LocalizedStringResource {
+        r("first_win_add", "Add to the list")
+    }
+
+    /// Later
+    public static var firstWinLater: LocalizedStringResource {
+        r("first_win_later", "Later")
+    }
+
+    /// Your house is ready
+    public static var firstWinReadyTitle: LocalizedStringResource {
+        r("first_win_ready_title", "Your house is ready")
+    }
+
+    /// “%@” is on your shared list.
+    public static func firstWinReadyText(_ a0: String) -> LocalizedStringResource {
+        r("first_win_ready_text", "“\(a0)” is on your shared list.")
+    }
+
+    /// See the list
+    public static var firstWinOpenList: LocalizedStringResource {
+        r("first_win_open_list", "See the list")
+    }
+
+    /// Make %@ a Plus home
+    public static func paywallOnboardingTitle(_ a0: String) -> LocalizedStringResource {
+        r("paywall_onboarding_title", "Make \(a0) a Plus home")
+    }
+
+    /// Everything your house needs to run smoothly, for everyone who lives there.
+    public static var paywallOnboardingSubtitle: LocalizedStringResource {
+        r("paywall_onboarding_subtitle", "Everything your house needs to run smoothly, for everyone who lives there.")
+    }
+
+    /// Never double-book the house
+    public static var paywallWinCalendar: LocalizedStringResource {
+        r("paywall_win_calendar", "Never double-book the house")
+    }
+
+    /// Split costs fairly and settle up in a tap
+    public static var paywallWinMoney: LocalizedStringResource {
+        r("paywall_win_money", "Split costs fairly and settle up in a tap")
+    }
+
+    /// Report what's broken and see who's on it
+    public static var paywallWinProblems: LocalizedStringResource {
+        r("paywall_win_problems", "Report what's broken and see who's on it")
+    }
+
+    /// Chat and polls just for your house
+    public static var paywallWinMessages: LocalizedStringResource {
+        r("paywall_win_messages", "Chat and polls just for your house")
+    }
+
+    /// Shopping by aisle, so nobody wanders
+    public static var paywallWinShopping: LocalizedStringResource {
+        r("paywall_win_shopping", "Shopping by aisle, so nobody wanders")
+    }
+
+    /// One subscription covers up to two of your homes.
+    public static var paywallCoversTwoHomes: LocalizedStringResource {
+        r("paywall_covers_two_homes", "One subscription covers up to two of your homes.")
+    }
+
+    /// Save %@ vs monthly
+    public static func paywallSaveVsMonthly(_ a0: String) -> LocalizedStringResource {
+        r("paywall_save_vs_monthly", "Save \(a0) vs monthly")
+    }
+
+    /// Today
+    public static var paywallTimelineTodayTitle: LocalizedStringResource {
+        r("paywall_timeline_today_title", "Today")
+    }
+
+    /// Everything in Plus unlocks. You pay nothing now.
+    public static var paywallTimelineTodayText: LocalizedStringResource {
+        r("paywall_timeline_today_text", "Everything in Plus unlocks. You pay nothing now.")
+    }
+
+    /// Any time before day %@
+    public static func paywallTimelineCancelTitle(_ a0: String) -> LocalizedStringResource {
+        r("paywall_timeline_cancel_title", "Any time before day \(a0)")
+    }
+
+    /// Cancel in Settings and you won't be charged.
+    public static var paywallTimelineCancelText: LocalizedStringResource {
+        r("paywall_timeline_cancel_text", "Cancel in Settings and you won't be charged.")
+    }
+
+    /// Day %@
+    public static func paywallTimelineEndTitle(_ a0: String) -> LocalizedStringResource {
+        r("paywall_timeline_end_title", "Day \(a0)")
+    }
+
+    /// Your free trial ends, then %@.
+    public static func paywallTimelineEndText(_ a0: String) -> LocalizedStringResource {
+        r("paywall_timeline_end_text", "Your free trial ends, then \(a0).")
+    }
+
+    /// Start my free week
+    public static var paywallStartFreeWeek: LocalizedStringResource {
+        r("paywall_start_free_week", "Start my free week")
+    }
+
+    /// Continue · %@
+    public static func paywallContinuePrice(_ a0: String) -> LocalizedStringResource {
+        r("paywall_continue_price", "Continue · \(a0)")
+    }
+
+    /// Nothing to pay today
+    public static var paywallNothingDueToday: LocalizedStringResource {
+        r("paywall_nothing_due_today", "Nothing to pay today")
+    }
 }

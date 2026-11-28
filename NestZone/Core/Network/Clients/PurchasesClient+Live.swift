@@ -61,7 +61,8 @@ extension PurchasesClient: DependencyKey {
                     kind: package.packageType == .annual ? .yearly : .monthly,
                     price: product.localizedPriceString,
                     pricePerMonth: package.packageType == .annual ? product.localizedPricePerMonth : nil,
-                    trialDays: trialDays
+                    trialDays: trialDays,
+                    amount: product.price
                 ))
             }
             return packages

@@ -209,6 +209,7 @@ public struct SettingsFeature: Sendable {
         case inviteCodeCopyExpired
         case manageHomesTapped
         case customizeTapped
+        case tourTapped
         case calendarRowTapped
         case checkForUpdatesTapped
         case updateCheckFinished(Result<ReleaseCheck, AppError>)
@@ -258,6 +259,8 @@ public struct SettingsFeature: Sendable {
             /// Customize belongs to the tab bar, not to Settings, so the tab
             /// container opens it — over this sheet.
             case customizeTapped
+            /// "Take the tour": the tab bar plays the intro again over this sheet.
+            case tourRequested
             /// The sign-out finished. Raised so the root ends the session
             /// itself, rather than relying on the SDK announcing it: the SDK
             /// says nothing the root will act on while the launch is still
@@ -525,6 +528,9 @@ public struct SettingsFeature: Sendable {
 
             case .customizeTapped:
                 return .send(.delegate(.customizeTapped))
+
+            case .tourTapped:
+                return .send(.delegate(.tourRequested))
 
             case .calendarRowTapped:
                 state.destination = .calendar(CalendarSettingsFeature.State(homeID: state.homeID, members: Array(state.members)))

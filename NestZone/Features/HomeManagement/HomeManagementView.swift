@@ -114,8 +114,9 @@ public struct HomeManagementView: View {
     }
 }
 
-/// A large tappable option — "create a home" / "join a home".
-private struct ChoiceCard: View {
+/// A large tappable option — "create a home" / "join a home". Also the
+/// tour's last page, which offers the same two.
+struct ChoiceCard: View {
     let title: LocalizedStringResource
     let subtitle: LocalizedStringResource
     let symbol: String

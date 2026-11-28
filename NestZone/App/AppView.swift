@@ -31,6 +31,11 @@ public struct AppView: View {
                 NameAskView(store: store.scope(state: \.nameAsk, action: \.nameAsk))
                     .transition(.opacity)
 
+            case .onboarding:
+                if let onboarding = store.scope(state: \.onboarding, action: \.onboarding) {
+                    OnboardingView(store: onboarding).transition(.opacity)
+                }
+
             case .choosingHome:
                 HomeManagementView(store: store.scope(state: \.homeGate, action: \.homeGate))
                     .transition(.opacity)
@@ -184,6 +189,10 @@ struct MainView: View {
             // Over Settings when it was opened from there, so closing it
             // lands back where the person was.
             .customizeSheet(store, when: true)
+            // "Take the tour": the whole screen, over this sheet.
+            .fullScreenCover(item: $store.scope(state: \.tour, action: \.tour)) {
+                OnboardingView(store: $0)
+            }
         }
         // Over the tabs otherwise: Today's own link.
         .customizeSheet(store, when: false)

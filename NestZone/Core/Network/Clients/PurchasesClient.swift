@@ -16,19 +16,25 @@ public struct PlusPackage: Equatable, Identifiable, Sendable {
     /// Days of free trial this person gets, from the introductory offer, when
     /// they are eligible for it.
     public var trialDays: Int?
+    /// The price as a number, for the one sum the paywall does: what the
+    /// yearly plan saves against twelve months of the monthly one. Never drawn
+    /// as text; `price` is what a person reads.
+    public var amount: Decimal?
 
     public init(
         id: String,
         kind: Kind,
         price: String,
         pricePerMonth: String? = nil,
-        trialDays: Int? = nil
+        trialDays: Int? = nil,
+        amount: Decimal? = nil
     ) {
         self.id = id
         self.kind = kind
         self.price = price
         self.pricePerMonth = pricePerMonth
         self.trialDays = trialDays
+        self.amount = amount
     }
 }
 

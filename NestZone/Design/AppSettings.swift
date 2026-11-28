@@ -217,6 +217,13 @@ public enum CurrencyDefaults {
 // MARK: - Calendar
 
 extension SharedKey where Self == AppStorageKey<String>.Default {
+    /// Who the person lives with, from the tour's one question: a
+    /// `HouseholdKind` raw value, or empty until it is answered. Per device,
+    /// never sent anywhere; it only tunes how a line of copy talks.
+    public static var householdKind: Self {
+        Self[.appStorage("appHouseholdKind"), default: ""]
+    }
+
     /// The people the calendar is narrowed to, per house (`home:id,id;home:id`,
     /// see `CalendarLists.users(_:home:)`); empty is "Everyone". Remembered on
     /// this phone, like the tab segments. Keyed by house because a person

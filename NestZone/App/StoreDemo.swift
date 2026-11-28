@@ -118,11 +118,12 @@ enum StoreDemo {
 
     static var plusPackages: [PlusPackage] {
         let yearly = amount(usd: "19.99", lira: lira.yearly)
+        let monthly = amount(usd: "2.99", lira: lira.monthly)
         return [
             PlusPackage(id: "demo.yearly", kind: .yearly, price: display(yearly),
-                        pricePerMonth: display(perMonth(yearly)), trialDays: 7),
+                        pricePerMonth: display(perMonth(yearly)), trialDays: 7, amount: yearly),
             PlusPackage(id: "demo.monthly", kind: .monthly,
-                        price: display(amount(usd: "2.99", lira: lira.monthly))),
+                        price: display(monthly), amount: monthly),
         ]
     }
 

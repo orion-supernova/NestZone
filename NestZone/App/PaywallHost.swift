@@ -73,17 +73,26 @@ private struct PaywallHost: ViewModifier {
     func body(content: Content) -> some View {
         content
             .environment(\.paywallDepth, depth)
-            .sheet(item: Binding(
-                get: {
-                    (hosts?.topDepth ?? 0) == depth
-                        ? store?.scope(state: \.paywall, action: \.paywall.presented)
-                        : nil
-                },
-                set: { if $0 == nil { store?.send(.paywall(.dismiss)) } }
-            )) { paywall in
-                PaywallView(store: paywall)
-            }
+            .sheet(item: paywall(onboarding: false)) { PaywallView(store: $0) }
+            // The one a first run ends in is the whole screen, not a sheet
+            // over a house the person has not used yet.
+            .fullScreenCover(item: paywall(onboarding: true)) { PaywallView(store: $0) }
             .onAppear { hosts?.appear(id, depth: depth) }
             .onDisappear { hosts?.disappear(id) }
+    }
+
+    /// The paywall's store while this is the top host and its context is the
+    /// one asked for.
+    private func paywall(onboarding: Bool) -> Binding<StoreOf<PaywallFeature>?> {
+        Binding(
+            get: {
+                guard (hosts?.topDepth ?? 0) == depth,
+                      let scoped = store?.scope(state: \.paywall, action: \.paywall.presented),
+                      (scoped.context == .onboarding) == onboarding
+                else { return nil }
+                return scoped
+            },
+            set: { if $0 == nil { store?.send(.paywall(.dismiss)) } }
+        )
     }
 }

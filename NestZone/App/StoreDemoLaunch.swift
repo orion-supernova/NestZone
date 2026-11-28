@@ -22,7 +22,7 @@ import Foundation
 enum StoreDemoLaunch {
     static func run(_ store: StoreOf<MainFeature>) async {
         let defaults = UserDefaults.standard
-        let requested = ["openConversation", "openMovieNight", "openRecipe", "openIssue", "calendarMode", "openSettings", "openCustomize", "dockMode", "openInbox", "openUpdatesEditor", "openEvent", "pinnedDemo", "dockNotice", "switchHome"]
+        let requested = ["openConversation", "openMovieNight", "openRecipe", "openIssue", "calendarMode", "openSettings", "openCustomize", "dockMode", "openInbox", "openUpdatesEditor", "openEvent", "pinnedDemo", "dockNotice", "switchHome", "openTour", "openPostOnboarding"]
             .contains { defaults.object(forKey: $0) != nil }
         guard requested else { return }
         try? await Task.sleep(for: .seconds(3))
@@ -58,6 +58,17 @@ enum StoreDemoLaunch {
         // off, which a long press cannot be scripted to do.
         if defaults.bool(forKey: "dockNotice") {
             store.send(.now(.delegate(.dockTurnedOff)))
+        }
+        // `-openTour 1` opens Settings' tour; `-openPostOnboarding 1` plays the
+        // end of a first run (Plus offer, then the first shopping item) as if
+        // a home had just been made.
+        if defaults.bool(forKey: "openTour") {
+            store.send(.settingsButtonTapped)
+            try? await Task.sleep(for: .seconds(1))
+            store.send(.settings(.delegate(.tourRequested)))
+        }
+        if defaults.bool(forKey: "openPostOnboarding") {
+            store.send(.firstRunBegan)
         }
         if defaults.bool(forKey: "openCustomize") {
             store.send(.settings(.delegate(.customizeTapped)))

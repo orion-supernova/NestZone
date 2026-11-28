@@ -53,11 +53,23 @@ public struct AppFeature: Sendable {
         public var auth = AuthFeature.State()
         public var homeGate = HomeManagementFeature.State()
         public var main: MainFeature.State?
+        /// The tour of a person's first launch with no home, shown instead of
+        /// the bare create-or-join screen. Nil for everybody else, and for a
+        /// replay (that one is `MainFeature`'s, over Settings).
+        public var onboarding: OnboardingFeature.State?
+        /// The person made or joined a home from the tour and the tabs have
+        /// not been told yet: the rest of the first run (Plus, the first
+        /// shopping item) starts when they exist.
+        var firstRunHandoff = false
         public var nameAsk = NameAskFeature.State()
         /// "Later" on the name question, for this launch only: it asks again
         /// next launch until there is a name.
         var nameAskDeferred = false
 
+        /// The tour has been through once on this device (set when a home is
+        /// made or joined from it, or silently for somebody who already has
+        /// one), so it never shows twice.
+        @Shared(.hasCompletedOnboarding) public var hasCompletedOnboarding: Bool
         @Shared(.theme) public var theme: AppTheme
         @Shared(.language) public var language: AppLanguage
         /// Reset when a session ends: it is one house's standing.
@@ -87,11 +99,16 @@ public struct AppFeature: Sendable {
             // and never on the provisional launch above, so a person who has a
             // name never sees it flash.
             if asksForName { return .askingName }
+            // Then the tour, for a first launch with no home.
+            if onboarding != nil { return .onboarding }
             // Stay on the launch screen until the home list has actually
             // arrived. Otherwise every launch flashes the "Let's get started"
             // picker for as long as the round trip takes, because an empty list
             // and "no home yet" are indistinguishable.
             if homeGate.isLoading { return .launching }
+            // A home was just made from the tour and has not reached the list
+            // yet: not the picker for a beat.
+            if firstRunHandoff, selectedHome == nil { return .launching }
             guard selectedHome != nil else { return .choosingHome }
             // The tab container is built by `syncMain`, in response to a
             // `homeGate` action. Seeded from the cache the selection is already
@@ -110,7 +127,7 @@ public struct AppFeature: Sendable {
         }
 
         public enum Screen: Equatable {
-            case launching, signedOut, offline, askingName, choosingHome, main
+            case launching, signedOut, offline, askingName, onboarding, choosingHome, main
         }
     }
 
@@ -137,6 +154,7 @@ public struct AppFeature: Sendable {
         case auth(AuthFeature.Action)
         case homeGate(HomeManagementFeature.Action)
         case main(MainFeature.Action)
+        case onboarding(OnboardingFeature.Action)
         case nameAsk(NameAskFeature.Action)
         /// The write failed: the name comes off again and the question says why.
         case nameSaveFailed(String, AppError)
@@ -499,6 +517,7 @@ public struct AppFeature: Sendable {
             // here rather than in the view means tab state survives a redraw
             // and dies with the home it belonged to.
             case let .homeGate(.homesUpdated(live)):
+                updateOnboarding(&state, live: live)
                 // A house that is no longer in the list was left, or the person
                 // was removed from it: what this phone holds for it (copies in
                 // the calendars, pins, what was shared) goes with it.
@@ -617,11 +636,25 @@ public struct AppFeature: Sendable {
                 state.nameAskDeferred = true
                 return .none
 
-            case .auth, .main, .nameAsk:
+            // A home was made or joined from the tour. Nothing is navigated
+            // from here: the tabs are built from the live home list as ever,
+            // and told once they exist (`syncMain`).
+            case .onboarding(.delegate(.homeReady)):
+                state.$hasCompletedOnboarding.withLock { $0 = true }
+                state.onboarding = nil
+                state.firstRunHandoff = true
+                return syncMain(&state)
+
+            case .onboarding(.delegate(.finished)):
+                state.onboarding = nil
+                return .none
+
+            case .auth, .main, .nameAsk, .onboarding:
                 return .none
             }
         }
         .ifLet(\.main, action: \.main) { MainFeature() }
+        .ifLet(\.onboarding, action: \.onboarding) { OnboardingFeature() }
     }
 
     /// Everything a session leaving takes with it: the tabs, the signed-in user,
@@ -631,6 +664,8 @@ public struct AppFeature: Sendable {
         state.nameAsk = NameAskFeature.State()
         state.nameAskDeferred = false
         state.main = nil
+        state.onboarding = nil
+        state.firstRunHandoff = false
         state.proCheckedFor = nil
         state.pendingTap = nil
         state.missingHomes = []
@@ -767,7 +802,36 @@ public struct AppFeature: Sendable {
     /// the tabs this just built.
     private func syncMain(_ state: inout State) -> Effect<Action> {
         syncMainState(&state)
-        return deliverPendingTap(&state, settle: true)
+        return .merge(deliverFirstRun(&state), deliverPendingTap(&state, settle: true))
+    }
+
+    /// Decides, from the live home list, whether this is a first run: no home
+    /// and the tour never seen starts it; a home (an existing person, a new
+    /// phone) marks it seen without ever showing it, and ends one that was
+    /// waiting if the home came from somewhere else. A tour with a sheet open
+    /// is left to finish; the sheet's own `finished` is what moves it on.
+    private func updateOnboarding(_ state: inout State, live: [Home]) {
+        // Screenshot runs never see it, as they never see the name question.
+        guard !StoreDemo.isOn, StoreDemo.persona == nil else { return }
+        if !live.isEmpty {
+            guard state.onboarding?.destination == nil, !state.firstRunHandoff else { return }
+            if !state.hasCompletedOnboarding { state.$hasCompletedOnboarding.withLock { $0 = true } }
+            state.onboarding = nil
+            return
+        }
+        guard !state.hasCompletedOnboarding, state.onboarding == nil, !state.firstRunHandoff,
+              !state.isProvisional, state.status == .authenticated
+        else { return }
+        state.onboarding = OnboardingFeature.State(mode: .firstRun)
+    }
+
+    /// Tells the tabs that a first run just got its home, once they exist.
+    private func deliverFirstRun(_ state: inout State) -> Effect<Action> {
+        guard state.firstRunHandoff, state.onboarding == nil,
+              let main = state.main, main.homeID == state.selectedHome?.id
+        else { return .none }
+        state.firstRunHandoff = false
+        return .send(.main(.firstRunBegan))
     }
 
     /// Hands a waiting tap to the tabs, switching to the house it names first

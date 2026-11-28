@@ -15,11 +15,18 @@ public struct PaywallFeature: Sendable {
         /// What the person reached for; `nil` for the general paywall (Settings,
         /// or a refusal for something this build has no name for).
         public var feature: ProFeature?
+        /// A sheet over what was reached for, or the full-screen one a first
+        /// run ends in.
+        public var context: Context
         public var houseName: String
         /// The homes the app already has, by id, for the coverage line.
         public var homeNames: [HomeID: String]
         public var packages: [PlusPackage] = []
         public var selectedID: PlusPackage.ID?
+        /// What the yearly plan saves against twelve months of the monthly
+        /// one, in whole percent, worked out from the two real prices once
+        /// they are known. Nil when either is missing or the gap is trivial.
+        public var savingsPercent: Int?
         public var isLoading = true
         /// No SDK key, or the offering would not load.
         public var isUnavailable = false
@@ -34,8 +41,16 @@ public struct PaywallFeature: Sendable {
         public var message: Message?
         @Shared(.pro) public var status: ProStatus
 
-        public init(feature: ProFeature?, houseName: String = "", homeNames: [HomeID: String] = [:]) {
+        public enum Context: Equatable, Sendable { case sheet, onboarding }
+
+        public init(
+            feature: ProFeature?,
+            context: Context = .sheet,
+            houseName: String = "",
+            homeNames: [HomeID: String] = [:]
+        ) {
             self.feature = feature
+            self.context = context
             self.houseName = houseName
             self.homeNames = homeNames
         }
@@ -48,6 +63,20 @@ public struct PaywallFeature: Sendable {
 
         public var selected: PlusPackage? {
             packages.first { $0.id == selectedID } ?? packages.first
+        }
+
+        /// The one plan that costs least per month, from the real prices: the
+        /// yearly plan's twelfth against the monthly price. Without prices to
+        /// compare it is the yearly plan, so there is always exactly one.
+        public var bestValueID: PlusPackage.ID? {
+            // One plan is not a comparison.
+            guard packages.count > 1 else { return nil }
+            let priced = packages.compactMap { package -> (PlusPackage.ID, Decimal)? in
+                guard let amount = package.amount else { return nil }
+                return (package.id, package.kind == .yearly ? amount / 12 : amount)
+            }
+            if priced.count == packages.count, let best = priced.min(by: { $0.1 < $1.1 }) { return best.0 }
+            return packages.first { $0.kind == .yearly }?.id ?? packages.first?.id
         }
 
         /// Whether the house is already covered, which turns the sheet from a
@@ -109,6 +138,7 @@ public struct PaywallFeature: Sendable {
                 state.isLoading = false
                 state.isUnavailable = packages.isEmpty
                 state.packages = packages
+                state.savingsPercent = Self.savings(in: packages)
                 // The yearly plan is the one on offer first.
                 state.selectedID = packages.first { $0.kind == .yearly }?.id ?? packages.first?.id
                 return .none
@@ -217,6 +247,21 @@ public struct PaywallFeature: Sendable {
             try await clock.sleep(for: Self.successLinger)
             await send(.delegate(.dismiss))
         }
+    }
+
+    /// The yearly plan against twelve months of the monthly one, in whole
+    /// percent rounded down so the claim is never generous. Only from real
+    /// prices, and only when it is worth saying (5% or more).
+    static func savings(in packages: [PlusPackage]) -> Int? {
+        guard let yearly = packages.first(where: { $0.kind == .yearly })?.amount,
+              let monthly = packages.first(where: { $0.kind == .monthly })?.amount,
+              monthly > 0
+        else { return nil }
+        let twelve = NSDecimalNumber(decimal: monthly * 12).doubleValue
+        let paid = NSDecimalNumber(decimal: yearly).doubleValue
+        guard twelve > 0 else { return nil }
+        let percent = Int(((1 - paid / twelve) * 100).rounded(.down))
+        return percent >= 5 ? percent : nil
     }
 
     /// Asks the server to look until it sees the subscription, a few times: it

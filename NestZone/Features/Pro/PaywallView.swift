@@ -13,38 +13,68 @@ struct PaywallView: View {
     @Environment(\.theme) private var theme
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
     @Environment(\.openURL) private var openURL
+    /// Where the sheen on the button has got to: it crosses once, when the
+    /// plans first appear, and never again.
+    @State private var sheen: CGFloat = -1
 
     private static let privacyURL = URL(string: "https://walhallaa.com/nestzone-privacy-terms")!
     private static let termsURL = URL(string: "https://walhallaa.com/nestzone-privacy-terms#terms")!
+    /// One bright diagonal band, built once.
+    private static let sheenBand = LinearGradient(
+        colors: [.white.opacity(0), .white.opacity(0.38), .white.opacity(0)],
+        startPoint: .leading,
+        endPoint: .trailing
+    )
+
+    private var isOnboarding: Bool { store.context == .onboarding }
+
+    /// Whether there is a button to buy with: plans loaded and the house not
+    /// already covered.
+    private var showsPurchaseBar: Bool {
+        !store.isCovered && !store.isLoading && !store.isUnavailable && store.selected != nil
+    }
 
     var body: some View {
         NavigationStack {
             ScrollView {
                 VStack(spacing: Metrics.sectionSpacing) {
-                    hero
-                    ProPreview(feature: store.feature)
-                    benefits
-                    seeEverything
-                    coverage
+                    hero.appear(0)
+                    if !isOnboarding { ProPreview(feature: store.feature) }
+                    benefits.appear(1)
+                    coverage.appear(2)
                     if store.isCovered {
                         covered
                     } else {
-                        plans
+                        plans.appear(3)
+                        if let trial = store.selected?.trialDays, let package = store.selected {
+                            TrialTimeline(days: trial, billed: billed(package))
+                                .transition(.opacity)
+                        }
                     }
+                    seeEverything
                     legal
                 }
                 .padding(.horizontal, Metrics.screenPadding)
                 .padding(.vertical, Metrics.stackSpacing)
+                .animation(reduceMotion ? Motion.fade : Motion.spring, value: store.selected?.id)
             }
             .background(Backdrop(tint: theme.accent))
             .scrollEdgeEffectStyle(.soft, for: .top)
             .navigationBarTitleDisplayMode(.inline)
+            .safeAreaBar(edge: .bottom) {
+                if showsPurchaseBar { purchaseBar }
+            }
             .toolbar {
-                ToolbarItem(placement: .cancellationAction) {
-                    Button { store.send(.closeTapped) } label: { Image(systemName: "xmark") }
-                        .accessibilityLabel(Text(L10n.paywallClose))
-                        // Closing would cancel the settling of a payment.
-                        .disabled(store.isPurchasing || store.isRestoring)
+                // Always there, quiet, and in the corner a person looks for it.
+                ToolbarItem(placement: isOnboarding ? .topBarTrailing : .cancellationAction) {
+                    Button { store.send(.closeTapped) } label: {
+                        Image(systemName: "xmark")
+                            .foregroundStyle(isOnboarding ? AnyShapeStyle(.secondaryText) : AnyShapeStyle(.primary))
+                    }
+                    .accessibilityLabel(Text(L10n.paywallClose))
+                    .accessibilityIdentifier("PaywallClose")
+                    // Closing would cancel the settling of a payment.
+                    .disabled(store.isPurchasing || store.isRestoring)
                 }
             }
             .overlay { if store.didSucceed { successStamp } }
@@ -60,7 +90,9 @@ struct PaywallView: View {
 
     private var hero: some View {
         VStack(spacing: 10) {
-            if let feature = store.feature {
+            if isOnboarding {
+                heroArt
+            } else if let feature = store.feature {
                 Image(systemName: feature.symbol)
                     .font(.system(size: 30, weight: .semibold))
                     .foregroundStyle(.accentText)
@@ -71,10 +103,11 @@ struct PaywallView: View {
                 PlusBrandTile(size: 72)
             }
             PlusLockup(tileSize: nil, font: .system(.title3, design: .rounded, weight: .bold))
-            Text(store.feature?.paywallTitle ?? L10n.paywallTitleGeneral)
-                .font(.system(.title2, design: .rounded, weight: .bold))
+            Text(heroTitle)
+                .font(.system(isOnboarding ? .largeTitle : .title2, design: .rounded, weight: .bold))
                 .multilineTextAlignment(.center)
-            Text(L10n.paywallSubtitle)
+                .accessibilityAddTraits(.isHeader)
+            Text(isOnboarding ? L10n.paywallOnboardingSubtitle : L10n.paywallSubtitle)
                 .font(.subheadline)
                 .foregroundStyle(.secondaryText)
                 .multilineTextAlignment(.center)
@@ -83,14 +116,43 @@ struct PaywallView: View {
         .padding(.top, 4)
     }
 
+    private var heroTitle: LocalizedStringResource {
+        if isOnboarding, !store.houseName.isEmpty { return L10n.paywallOnboardingTitle(store.houseName) }
+        return store.feature?.paywallTitle ?? L10n.paywallTitleGeneral
+    }
+
+    /// The house, and what lives in it.
+    private var heroArt: some View {
+        GlassGroup(spacing: 40) {
+            ZStack {
+                PlusBrandTile(size: 96)
+                heroDisc("calendar.badge.clock", x: -92, y: -30)
+                heroDisc("dollarsign.circle.fill", x: 92, y: -34)
+                heroDisc("wrench.adjustable.fill", x: -78, y: 44)
+                heroDisc("bubble.left.and.bubble.right.fill", x: 80, y: 46)
+            }
+        }
+        .frame(height: 150)
+        .accessibilityHidden(true)
+    }
+
+    private func heroDisc(_ symbol: String, x: CGFloat, y: CGFloat) -> some View {
+        Image(systemName: symbol)
+            .font(.system(size: 18, weight: .semibold))
+            .foregroundStyle(.accentText)
+            .frame(width: 44, height: 44)
+            .glassEffect(.regular.tint(theme.accent.opacity(0.16)), in: .circle)
+            .offset(x: x, y: y)
+    }
+
     private var benefits: some View {
         GlassCard {
             VStack(alignment: .leading, spacing: 14) {
-                benefit("calendar.badge.clock", Palette.hotPink, L10n.paywallBenefitCalendar)
-                benefit("dollarsign.circle.fill", Palette.indigo, L10n.paywallBenefitMoney)
-                benefit("cart.fill", Palette.success, L10n.paywallBenefitShopping)
-                benefit("bubble.left.and.bubble.right.fill", Palette.amber, L10n.paywallBenefitMessages)
-                benefit("film.stack.fill", Palette.violet, L10n.paywallBenefitMore)
+                benefit("calendar.badge.clock", L10n.paywallWinCalendar)
+                benefit("dollarsign.circle.fill", L10n.paywallWinMoney)
+                benefit("wrench.adjustable.fill", L10n.paywallWinProblems)
+                benefit("bubble.left.and.bubble.right.fill", L10n.paywallWinMessages)
+                benefit("cart.fill", L10n.paywallWinShopping)
             }
             .frame(maxWidth: .infinity, alignment: .leading)
         }
@@ -114,15 +176,16 @@ struct PaywallView: View {
         .buttonStyle(.pressable)
     }
 
-    private func benefit(_ symbol: String, _ tint: Color, _ text: LocalizedStringResource) -> some View {
+    private func benefit(_ symbol: String, _ text: LocalizedStringResource) -> some View {
         HStack(spacing: 12) {
             Image(systemName: symbol)
                 .font(.body.weight(.semibold))
-                .foregroundStyle(tint)
+                .foregroundStyle(.accentText)
                 .frame(width: 28)
                 .accessibilityHidden(true)
             Text(text).font(.subheadline)
         }
+        .accessibilityElement(children: .combine)
     }
 
     /// Who the subscription is for, and who is already paying.
@@ -132,6 +195,9 @@ struct PaywallView: View {
                 Text(L10n.paywallCoversHouse(store.houseName))
                     .font(.subheadline.weight(.semibold))
             }
+            Text(L10n.paywallCoversTwoHomes)
+                .font(.footnote)
+                .foregroundStyle(.secondaryText)
             if let carrier = store.status.carrier, store.status.isPro {
                 Text(store.status.mine
                     ? L10n.paywallCarriedByYou
@@ -163,45 +229,94 @@ struct PaywallView: View {
             .padding(Metrics.cardPadding)
             .glassCard()
         } else {
-            VStack(spacing: Metrics.stackSpacing) {
-                GlassGroup(spacing: Metrics.stackSpacing) {
-                    ForEach(store.packages) { package in
-                        PlanCard(
-                            package: package,
-                            isSelected: package.id == store.selected?.id
-                        ) {
-                            // No spring and no symbol replace under Reduce
-                            // Motion: the tick and the haptic still say it.
-                            store.send(.packageTapped(package.id), animation: reduceMotion ? nil : Motion.spring)
-                        }
+            GlassGroup(spacing: Metrics.stackSpacing) {
+                ForEach(store.packages) { package in
+                    PlanCard(
+                        package: package,
+                        isSelected: package.id == store.selected?.id,
+                        isBestValue: package.id == store.bestValueID,
+                        savingsPercent: package.kind == .yearly ? store.savingsPercent : nil
+                    ) {
+                        // No spring and no symbol replace under Reduce
+                        // Motion: the tick and the haptic still say it.
+                        store.send(.packageTapped(package.id), animation: reduceMotion ? nil : Motion.spring)
                     }
                 }
-
-                if let message = store.message { messageLine(message) }
-
-                Button { store.send(.purchaseTapped) } label: {
-                    HStack(spacing: 8) {
-                        if store.isPurchasing { ProgressView().tint(theme.onAccent) }
-                        Text(ctaTitle)
-                    }
-                }
-                .buttonStyle(.depth)
-                .disabled(store.isPurchasing || store.isRestoring || store.selected == nil)
-                .accessibilityIdentifier("PaywallSubscribe")
-
-                // Renewal terms stand next to the button, before the tap.
-                Text(L10n.paywallRenewsNote)
-                    .font(.footnote)
-                    .foregroundStyle(.secondaryText)
-                    .multilineTextAlignment(.center)
-                    .frame(maxWidth: .infinity)
             }
         }
     }
 
+    /// The button, with the price and the renewal right under it, before the
+    /// tap (Guideline 3.1.2). Pinned to the bottom so it is on screen however
+    /// far the page has been read.
+    private var purchaseBar: some View {
+        VStack(spacing: 8) {
+            if let message = store.message { messageLine(message) }
+
+            Button { store.send(.purchaseTapped) } label: {
+                HStack(spacing: 8) {
+                    if store.isPurchasing { ProgressView().tint(theme.onAccent) }
+                    Text(ctaTitle)
+                }
+            }
+            .buttonStyle(.depth)
+            .overlay { sheenOverlay }
+            .disabled(store.isPurchasing || store.isRestoring || store.selected == nil)
+            .accessibilityIdentifier("PaywallSubscribe")
+            .task(id: store.packages.isEmpty) { await runSheen() }
+
+            if let package = store.selected {
+                if let days = package.trialDays {
+                    Text(L10n.paywallTrialThen(String(localized: L10n.paywallDaysFree(days)), billed(package)))
+                        .font(.footnote.weight(.medium))
+                    Text(L10n.paywallNothingDueToday)
+                        .font(.footnote)
+                        .foregroundStyle(.secondaryText)
+                }
+                Text(L10n.paywallRenewsNote)
+                    .font(.caption)
+                    .foregroundStyle(.secondaryText)
+            }
+        }
+        .multilineTextAlignment(.center)
+        .frame(maxWidth: .infinity)
+        .padding(.horizontal, Metrics.screenPadding)
+        .padding(.vertical, Metrics.stackSpacing)
+    }
+
+    /// A band of light across the button, once. Not at all under Reduce Motion.
+    private var sheenOverlay: some View {
+        GeometryReader { geometry in
+            Rectangle()
+                .fill(Self.sheenBand)
+                .frame(width: geometry.size.width * 0.35)
+                .offset(x: sheen * geometry.size.width)
+        }
+        .clipShape(.capsule)
+        .allowsHitTesting(false)
+        .accessibilityHidden(true)
+    }
+
+    private func runSheen() async {
+        guard !reduceMotion, !store.packages.isEmpty, sheen < 0 else { return }
+        try? await Task.sleep(for: .milliseconds(1100))
+        guard !Task.isCancelled else { return }
+        withAnimation(.easeInOut(duration: 1.0)) { sheen = 1.2 }
+    }
+
+    /// "$19.99/year" or "$2.99/month": the amount that is billed, and how often.
+    private func billed(_ package: PlusPackage) -> String {
+        String(localized: package.kind == .yearly
+            ? L10n.paywallPricePerYear(package.price)
+            : L10n.paywallPricePerMonth(package.price))
+    }
+
     private var ctaTitle: LocalizedStringResource {
-        guard let days = store.selected?.trialDays else { return L10n.paywallSubscribe }
-        return L10n.paywallStartTrialDays(days)
+        guard let package = store.selected else { return L10n.paywallSubscribe }
+        if let days = package.trialDays {
+            return days == 7 ? L10n.paywallStartFreeWeek : L10n.paywallStartTrialDays(days)
+        }
+        return L10n.paywallContinuePrice(billed(package))
     }
 
     private func messageLine(_ message: PaywallFeature.State.Message) -> some View {
@@ -286,6 +401,10 @@ struct PaywallView: View {
 private struct PlanCard: View {
     let package: PlusPackage
     let isSelected: Bool
+    /// Computed once for the whole list, so exactly one card says it.
+    let isBestValue: Bool
+    /// Only on the yearly card, only when real prices say so.
+    let savingsPercent: Int?
     let pick: () -> Void
 
     @Environment(\.theme) private var theme
@@ -302,7 +421,7 @@ private struct PlanCard: View {
                     HStack(spacing: 8) {
                         Text(package.kind == .yearly ? L10n.paywallYearly : L10n.paywallMonthly)
                             .font(.headline)
-                        if package.kind == .yearly {
+                        if isBestValue {
                             Text(L10n.paywallBestValue)
                                 .font(.caption.weight(.bold))
                                 .padding(.horizontal, 8)
@@ -314,6 +433,11 @@ private struct PlanCard: View {
                     // The billed price and its period lead; anything per month
                     // is a side note, smaller and quieter (Guideline 3.1.2).
                     Text(billedLine).font(.system(.title3, design: .rounded, weight: .bold))
+                    if let savingsPercent {
+                        Text(L10n.paywallSaveVsMonthly("\(savingsPercent)%"))
+                            .font(.subheadline.weight(.semibold))
+                            .foregroundStyle(Palette.success)
+                    }
                     if let trial = trialLine {
                         Text(trial).font(.subheadline.weight(.medium)).foregroundStyle(.accentText)
                     }

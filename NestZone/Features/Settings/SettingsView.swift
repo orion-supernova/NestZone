@@ -615,6 +615,13 @@ public struct SettingsView: View {
 
             updateOutcome
 
+            Button { store.send(.tourTapped) } label: {
+                Label { Text(L10n.settingsTakeTour) } icon: {
+                    Image(systemName: "sparkles.rectangle.stack")
+                }
+            }
+            .accessibilityIdentifier("SettingsTakeTour")
+
             // Required in the app for a subscription (3.1.2), and for
             // anybody who wants to read them.
             Link(destination: Self.privacyURL) {
