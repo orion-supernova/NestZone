@@ -431,6 +431,14 @@ with its own changelog entry, and the script refuses a version `stage`
 already carries. The build number still increments, but nobody reasons in
 build numbers any more.
 
+**What each part means (from 2.0.0, owner's decision 2026-11-28).** Major
+(`--bump major`) only when the app changes what it is or how people start
+with it, about once a year (2.0: the first-run tour, invites by link and QR,
+the new paywall). Minor for a release people would notice, a feature or a
+screen. Patch for fixes, including every extra TestFlight build of the same
+work. Versions compare part by part as numbers: 1.5 is *below* 1.14, and the
+App Store refuses a lower one.
+
 **Two branches, and `stage` is not a copy of the code.** `dev` is where work
 happens; `stage` is a pointer at the commit being released, moved only by this
 script, one push per release. **Xcode Cloud watches `stage`** and does the

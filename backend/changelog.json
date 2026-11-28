@@ -56,29 +56,41 @@
   ],
   "entries": [
     {
-      "slug": "1.14.8-fixes",
-      "version": "1.14.8",
-      "kind": "fix",
-      "title": "Fixes and improvements",
-      "body": "House plans you copy into your own calendar now bring their link along.",
+      "slug": "2.0.0-invites",
+      "version": "2.0.0",
+      "kind": "feature",
+      "title": "Invite people with a link or a QR code",
+      "body": "No more copying codes around. Send a link, or let them scan a QR code right off your phone, and they're in your home with one tap.",
       "highlights": [
-        "Fixed meeting links going missing from house plans copied into your calendar: the link is in the notes now, and a meeting gets a Join button"
+        "Share a link in any chat: one tap opens NestZone and asks to join",
+        "Or show a QR code: it changes every 10 minutes and you pick how many people can use it",
+        "Removing someone cancels every open invite",
+        "Fixed meeting links going missing from plans copied into your calendar",
+        "New here? Take the tour any time from Settings"
       ],
       "translations": [
         {
           "language": "tr",
-          "title": "Düzeltmeler ve iyileştirmeler",
-          "body": "Takvimine düşen ev planları artık linkiyle geliyor.",
+          "title": "Link ya da QR kodla davet et",
+          "body": "Kod kopyalayıp yapıştırmak yok artık. Link gönder ya da telefonundaki QR kodu okutsunlar, tek dokunuşla evdeler.",
           "highlights": [
-            "Takvimine kopyalanan toplantılarda linkin kaybolması düzeldi: link artık notlarda, toplantılarda da Katıl düğmesi çıkıyor"
+            "Linki herhangi bir sohbete at: dokununca NestZone açılır, katılmak isteyip istemediğini sorar",
+            "Ya da QR kodu göster: 10 dakikada bir değişir, kaç kişinin kullanabileceğini sen seçersin",
+            "Birini evden çıkarınca açık davetlerin hepsi iptal olur",
+            "Takvimine kopyalanan planlarda toplantı linkinin kaybolması düzeldi",
+            "Yeni misin? Ayarlar'dan istediğin zaman uygulamayı tanıyabilirsin"
           ]
         },
         {
           "language": "sv",
-          "title": "Fixar och förbättringar",
-          "body": "Hushållets planer i din egen kalender har nu med sig sin länk.",
+          "title": "Bjud in med en länk eller QR-kod",
+          "body": "Inget mer kopierande av koder. Skicka en länk eller låt dem skanna en QR-kod från din telefon, så är de med i hemmet med ett tryck.",
           "highlights": [
-            "Fixat att möteslänkar försvann från hushållets planer i din kalender: länken ligger nu i anteckningarna, och ett möte får en Anslut-knapp"
+            "Dela en länk i vilken chatt som helst: ett tryck öppnar NestZone och frågar om de vill gå med",
+            "Eller visa en QR-kod: den byts var tionde minut och du väljer hur många som får använda den",
+            "Tar du bort någon slutar alla öppna inbjudningar att gälla",
+            "Fixat att möteslänkar försvann från planer som kopierats till din kalender",
+            "Ny här? Ta rundturen när du vill från Inställningar"
           ]
         }
       ]
